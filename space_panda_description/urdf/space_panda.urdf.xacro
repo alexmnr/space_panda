@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="space_panda">
+  <xacro:arg name="tf_prefix" default=""/>
+  <xacro:arg name="robot_ip" default=""/>
+  <xacro:arg name="use_mock_hardware" default="false"/>
+  
+  <xacro:include filename="$(find space_panda_description)/urdf/space_panda.urdf_macro.xacro"/>
+  <xacro:space_panda_urdf_macro tf_prefix="$(arg tf_prefix)" safety_distance="0.03"/>
+
+  <xacro:include filename="$(find space_panda_description)/urdf/space_panda.ros2_control_macro.xacro"/>
+  <xacro:space_panda_ros2_control_macro tf_prefix="$(arg tf_prefix)" robot_ip="$(arg robot_ip)" use_mock_hardware="$(arg use_mock_hardware)"/>
+</robot>

@@ -1,0 +1,7 @@
+<library path="space_panda_controller">
+  <class name="space_panda_controller/SpacePandaController" type="space_panda_controller::SpacePandaController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      hehe
+    </description>
+  </class>
+</library>

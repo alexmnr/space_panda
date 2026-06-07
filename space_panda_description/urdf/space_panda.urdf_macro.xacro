@@ -1,0 +1,334 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- safety_distance: Minimum safety distance in [m] by which the collision volumes are expanded and which is enforced during robot motions -->
+  <!-- tf_prefix: Namespace of the panda arm. Serves to differentiate between arms in case of multiple instances. -->
+  <xacro:macro name="space_panda_urdf_macro" params="tf_prefix safety_distance:=0">
+    <link name="${tf_prefix}mount_point"/>
+    <joint name="${tf_prefix}base_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="${tf_prefix}mount_point" />
+      <child link="${tf_prefix}base_link" />
+    </joint>
+    <link name="${tf_prefix}base_link"/>
+    <joint name="${tf_prefix}base_link_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="${tf_prefix}base_link" />
+      <child link="${tf_prefix}link_0" />
+    </joint>
+    <link name="${tf_prefix}link_0">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_0.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="-0.075 0 0.06" rpy="0 ${pi/2} 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.03" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="-0.06 0 0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="-0.09 0 0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <link name="${tf_prefix}link_1">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_1.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.1915" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.2830" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.333" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_1" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.7473" soft_upper_limit="2.7473"/>
+      <origin rpy="0 0 0" xyz="0 0 0.333"/>
+      <parent link="${tf_prefix}link_0"/>
+      <child link="${tf_prefix}link_1"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="87" lower="-2.7473" upper="2.7473" velocity="2.1750" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_2">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_2.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.12" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_2" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.6728" soft_upper_limit="1.6728"/>
+      <origin rpy="${-pi/2} 0 0" xyz="0 0 0"/>
+      <parent link="${tf_prefix}link_1"/>
+      <child link="${tf_prefix}link_2"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="87" lower="-1.6728" upper="1.6728" velocity="2.1750" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_3">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_3.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.145" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.15" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.22" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_3" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.7473" soft_upper_limit="2.7473"/>
+      <origin rpy="${pi/2} 0 0" xyz="0 -0.316 0"/>
+      <parent link="${tf_prefix}link_2"/>
+      <child link="${tf_prefix}link_3"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="87" lower="-2.7473" upper="2.7473" velocity="2.1750" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_4">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_4.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.12" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_4" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.9218" soft_upper_limit="-0.2198"/>
+      <origin rpy="${pi/2} 0 0" xyz="0.0825 0 0"/>
+      <parent link="${tf_prefix}link_3"/>
+      <child link="${tf_prefix}link_4"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="87" lower="-2.9218" upper="-0.2198" velocity="2.1750" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_5">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_5.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.26" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.06+safety_distance}" length="0.1" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.31" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.21" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.06+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0.08 -0.13" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.025+safety_distance}" length="0.14" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0.08 -0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.025+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0.08 -0.20" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.025+safety_distance}" />
+        </geometry>
+      </collision>
+
+    </link>
+    <joint name="${tf_prefix}joint_5" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.7473" soft_upper_limit="2.7473"/>
+      <origin rpy="${-pi/2} 0 0" xyz="-0.0825 0.384 0"/>
+      <parent link="${tf_prefix}link_4"/>
+      <child link="${tf_prefix}link_5"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="12" lower="-2.7473" upper="2.7473" velocity="2.6100" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_6">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_6.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.05+safety_distance}" length="0.08" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 0.01" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.05+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.05+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_6" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-0.0775" soft_upper_limit="3.6025"/>
+      <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+      <parent link="${tf_prefix}link_5"/>
+      <child link="${tf_prefix}link_6"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="12" lower="-0.0775" upper="3.6025" velocity="2.6100" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_7">
+      <visual>
+        <geometry>
+          <mesh filename="package://space_panda_description/meshes/visual/link_7.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.01" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${0.04+safety_distance}" length="0.14" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 0.08" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.04+safety_distance}"  />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 -0.06" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.04+safety_distance}"  />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_7" type="revolute">
+      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.7473" soft_upper_limit="2.7473"/>
+      <origin rpy="${pi/2} 0 0" xyz="0.088 0 0"/>
+      <parent link="${tf_prefix}link_6"/>
+      <child link="${tf_prefix}link_7"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="12" lower="-2.7473" upper="2.7473" velocity="2.6100" acceleration="1.0"/>
+    </joint>
+    <link name="${tf_prefix}link_8">
+      <collision>
+        <origin xyz="0.0424 0.0424 -0.0250" rpy="${pi} ${pi/2} ${pi/2}"/>
+        <geometry>
+          <cylinder radius="${0.03+safety_distance}"  length="0.01" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0.0424 0.0424 -0.02" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.03+safety_distance}"  />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0.0424 0.0424 -0.03" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${0.03+safety_distance}"  />
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${tf_prefix}joint_8" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 0.107"/>
+      <parent link="${tf_prefix}link_7"/>
+      <child link="${tf_prefix}link_8"/>
+    </joint>
+
+    <link name="${tf_prefix}tool0"/>
+    <joint name="${tf_prefix}link_8-tool0" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${tf_prefix}link_8"/>
+      <child link="${tf_prefix}tool0"/>
+    </joint>
+
+    <link name="${tf_prefix}ft_frame"/>
+    <joint name="${tf_prefix}tool0-ft_frame" type="fixed">
+      <origin xyz="0 0 0.0" rpy="0 ${180*(pi/180)} ${-45*(pi/180)}"/>
+      <parent link="${tf_prefix}tool0"/>
+      <child link="${tf_prefix}ft_frame"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="space_panda">
+  <xacro:arg name="tf_prefix" default=""/>
+
+  <xacro:include filename="$(find space_panda_bringup)/srdf/space_panda.srdf_macro.xacro"/>
+
+  <xacro:space_panda_srdf_macro tf_prefix="$(arg tf_prefix)"/>
+
+</robot>
