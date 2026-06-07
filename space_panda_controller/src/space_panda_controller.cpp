@@ -115,7 +115,7 @@ namespace space_panda_controller
   }
 
   ////////////////////// update /////////////////////////
-  controller_interface::return_type SpacePandaController::update(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/){
+  controller_interface::return_type SpacePandaController::update(const rclcpp::Time & time, const rclcpp::Duration & /*period*/){
     // Read current joint positions from state interfaces
     for (size_t i = 0; i < state_interfaces_.size(); ++i) {
       current_joint_positions_[i] = state_interfaces_[i].get_optional().value_or(0.0);
@@ -130,12 +130,17 @@ namespace space_panda_controller
     Eigen::VectorXd desired_wrench_ee = Eigen::VectorXd::Zero(6); 
     auto command = rt_command_ptr_.readFromRT();
     if (command && *command) {
-        desired_wrench_ee(0) = (*command)->wrench.force.x;
-        desired_wrench_ee(1) = (*command)->wrench.force.y;
-        desired_wrench_ee(2) = (*command)->wrench.force.z;
-        desired_wrench_ee(3) = (*command)->wrench.torque.x;
-        desired_wrench_ee(4) = (*command)->wrench.torque.y;
-        desired_wrench_ee(5) = (*command)->wrench.torque.z;
+        rclcpp::Time msg_time((*command)->header.stamp);
+        rclcpp::Duration msg_age = time - msg_time;
+        // Apply the command only if it is newer than 100ms (0.1 seconds)
+        if (msg_age.seconds() <= 0.1) {
+            desired_wrench_ee(0) = (*command)->wrench.force.x;
+            desired_wrench_ee(1) = (*command)->wrench.force.y;
+            desired_wrench_ee(2) = (*command)->wrench.force.z;
+            desired_wrench_ee(3) = (*command)->wrench.torque.x;
+            desired_wrench_ee(4) = (*command)->wrench.torque.y;
+            desired_wrench_ee(5) = (*command)->wrench.torque.z;
+        }
     }
     // Get the transform of the tip_link relative to the root frame
     const Eigen::Isometry3d& link_transform = robot_state_->getGlobalLinkTransform(tip_link_model_);
