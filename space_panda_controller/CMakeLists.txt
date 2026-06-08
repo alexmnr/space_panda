@@ -14,6 +14,7 @@ set(DEPENDENCIES
   rclcpp
   rclcpp_lifecycle
   franka_msgs
+  franka_semantic_components
   Eigen3
   moveit_core
   moveit_ros_planning

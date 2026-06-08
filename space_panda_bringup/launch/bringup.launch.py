@@ -46,21 +46,6 @@ def launch_setup(context):
             "robot_description": ParameterValue(robot_description_content, value_type=str)
             }
 
-    # SRDF
-    srdf_file_path = PathJoinSubstitution([FindPackageShare("space_panda_bringup"), "srdf", "space_panda.srdf.xacro"])
-    srdf_content = Command(
-            [
-                PathJoinSubstitution([FindExecutable(name="xacro")]),
-                " ",
-                srdf_file_path,
-                " ",
-                "tf_prefix:=",
-                tf_prefix,
-                ])
-    robot_description_semantic = {
-            "robot_description_semantic": ParameterValue(srdf_content, value_type=str)
-            }
-
     nodes = []
 
     nodes.append(Node(
@@ -70,7 +55,7 @@ def launch_setup(context):
         namespace=ns,
         parameters=[
             robot_description,
-            {'publish_frequency': 500.0}
+            {'publish_frequency': 1000.0}
             ]
         ))
 
@@ -81,7 +66,6 @@ def launch_setup(context):
         parameters=[
             ParameterFile(ros2_controllers_file, allow_substs=True),
             robot_description,
-            robot_description_semantic,
             ],
         arguments=["--ros-args", "--log-level", log_level],
         output="screen",
@@ -105,14 +89,6 @@ def launch_setup(context):
             "joint_state_broadcaster",
             "--ros-args", "--log-level", log_level,
             ]
-        ))
-
-    nodes.append(Node(
-            package='controller_manager',
-            executable='spawner',
-            namespace=ns,
-            arguments=['franka_robot_state_broadcaster'],
-            output='screen',
         ))
 
     return nodes

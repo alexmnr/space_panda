@@ -13,6 +13,8 @@ set(DEPENDENCIES
   geometry_msgs
   moveit_msgs
   tf2_eigen
+  tf2
+  tf2_ros
   Eigen3
 )
 
