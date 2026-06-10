@@ -12,6 +12,7 @@ set(DEPENDENCIES
   rclcpp
   geometry_msgs
   moveit_msgs
+  tf2_geometry_msgs
   tf2_eigen
   tf2
   tf2_ros
@@ -27,6 +28,10 @@ endforeach()
 add_executable(
   space_panda_link 
   src/space_panda_link.cpp 
+  src/helper_functions.cpp 
+  src/mimicing.cpp 
+  src/wrench_passthrough.cpp 
+  src/setup.cpp
 )
 
 # Add include directories for the executable

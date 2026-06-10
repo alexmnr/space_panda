@@ -16,6 +16,7 @@ namespace space_panda_controller
       auto_declare<std::vector<std::string>>("joints", std::vector<std::string>());
       auto_declare<double>("command_force_limit", 5.0);
       auto_declare<double>("command_torque_limit", 0.5);
+      auto_declare<bool>("friction_compensation", false);
     }
     catch (const std::exception & e)
     {
@@ -45,6 +46,7 @@ namespace space_panda_controller
     }
     command_force_limit_ = get_node()->get_parameter("command_force_limit").as_double();
     command_torque_limit_ = get_node()->get_parameter("command_torque_limit").as_double();
+    friction_compensation_ = get_node()->get_parameter("friction_compensation").as_bool();
 
     // --- Configuring Panda Force Thresholds ---
     RCLCPP_INFO(get_node()->get_logger(), "Configuring Panda Force Thresholds...");
@@ -99,7 +101,7 @@ namespace space_panda_controller
   controller_interface::return_type SpacePandaController::update(const rclcpp::Time & time, const rclcpp::Duration & /*period*/){
     auto jacobian_array = franka_robot_model_->getZeroJacobian(franka::Frame::kEndEffector);
     Eigen::Map<const Eigen::Matrix<double, 6, 7>> jacobian(jacobian_array.data());
-    // 2. Safely read the desired wrench from the Realtime Buffer
+    // Safely read the desired wrench from the Realtime Buffer
     Eigen::VectorXd desired_wrench_ee = Eigen::VectorXd::Zero(6); 
     auto command = rt_command_ptr_.readFromRT();
     if (command && *command) {
@@ -115,21 +117,41 @@ namespace space_panda_controller
             desired_wrench_ee(5) = std::clamp((*command)->wrench.torque.z, -command_torque_limit_, command_torque_limit_);
         }
     }
-    // 3. Fetch Native End-Effector Pose (std::array<double, 16>)
+    // Fetch Native End-Effector Pose (std::array<double, 16>)
     auto current_pose_array = franka_robot_model_->getPose(franka::Frame::kEndEffector);
     // Map it to a 4x4 matrix and extract the 3x3 rotation matrix
     Eigen::Map<const Eigen::Matrix4d> current_pose(current_pose_array.data());
     Eigen::Matrix3d rotation_matrix = current_pose.block<3, 3>(0, 0);
 
-    // 4. Rotate the End-Effector wrench into the Base Frame
+    // Rotate the End-Effector wrench into the Base Frame
     Eigen::VectorXd desired_wrench_base = Eigen::VectorXd::Zero(6);
     desired_wrench_base.head<3>() = rotation_matrix * desired_wrench_ee.head<3>();
     desired_wrench_base.tail<3>() = rotation_matrix * desired_wrench_ee.tail<3>();
 
-    // 5. Calculate required joint efforts: tau = J^T * F
+    // Calculate required joint efforts: tau = J^T * F
     Eigen::VectorXd commanded_torques = jacobian.transpose() * desired_wrench_base;
 
-    // 6. Write the torques to the command interfaces
+    // --- FRICTION COMPENSATION ---
+    if (friction_compensation_) {
+      franka_msgs::msg::FrankaState franka_state_msg;
+      if (franka_robot_state_->get_values_as_message(franka_state_msg)) {
+        auto dq = franka_state_msg.dq; // dq is std::array<double, 7> representing joint velocities in rad/s
+                                       // 2. Calculate and add friction compensation for each joint
+        for (size_t i = 0; i < 7; ++i) {
+          double velocity = dq[i];
+          // Smooth Coulomb + Viscous friction model
+          double tau_friction = coulomb_friction_[i] * std::tanh(friction_smoothness_k_ * velocity) + 
+            viscous_friction_[i] * velocity;
+          // Add the friction compensation to the command
+          commanded_torques(i) += tau_friction;
+        }
+      } else {
+        RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, 
+            "Failed to read Franka state for friction compensation!");
+      }
+    }
+
+    // Write the torques to the command interfaces
     for (size_t i = 0; i < command_interfaces_.size(); ++i) {
       if (!command_interfaces_[i].set_value(commanded_torques(i))) {
         RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 1000, 

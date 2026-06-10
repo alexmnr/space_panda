@@ -1,0 +1,19 @@
+/**/space_panda_link:
+  ros__parameters:
+    enabled: True
+    leader_ns: "panda"
+    follower_ns: "ur20"
+    wrench_passthrough: 
+      enabled: True
+      filter_alpha: 0.1
+      force:
+        p_gain: 1.0
+        d_gain: 0.1
+        threshold: 1.0
+      torque:
+        p_gain: 1.0
+        d_gain: 0.1
+        threshold: 1.0
+    mimicing: 
+      enabled: True
+      scale: 1.0

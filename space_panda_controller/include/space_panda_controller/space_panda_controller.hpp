@@ -32,11 +32,17 @@ namespace space_panda_controller {
       std::vector<std::string> joint_names_;
       double command_force_limit_;
       double command_torque_limit_;
+      bool friction_compensation_;
 
       // panda setup
       rclcpp::Client<franka_msgs::srv::SetForceTorqueCollisionBehavior>::SharedPtr panda_client_;
       std::unique_ptr<franka_semantic_components::FrankaRobotModel> franka_robot_model_;
       std::unique_ptr<franka_semantic_components::FrankaRobotState> franka_robot_state_;
+
+      // Friction Compensation
+      std::array<double, 7> coulomb_friction_ = {0.8, 0.5, 0.3,  0.4,  0.3,  0.1,  0.2}; // [Nm]
+      std::array<double, 7> viscous_friction_ = {0.1, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05}; // [Nm / (rad/s)]
+      double friction_smoothness_k_ = 40.0;
 
       rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr wrench_subscriber_;
       realtime_tools::RealtimeBuffer<std::shared_ptr<geometry_msgs::msg::WrenchStamped>> rt_command_ptr_;
