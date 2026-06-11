@@ -43,12 +43,14 @@ namespace space_panda_link
       std::string leader_tf_prefix_;
       std::string follower_ns_;
       std::string follower_tf_prefix_;
-      double force_p_gain_;
-      double force_d_gain_;
-      double force_threshold_;
-      double torque_p_gain_;
-      double torque_d_gain_;
-      double torque_threshold_;
+      double force_transient_limit_;
+      double force_transient_scale_;
+      double force_steady_scale_;
+      double force_steady_alpha_;
+      double torque_transient_limit_;
+      double torque_transient_scale_;
+      double torque_steady_scale_;
+      double torque_steady_alpha_;
       double mimic_scale_;
       bool wrench_passthrough_enabled_;
       bool mimicing_enabled_;
@@ -61,7 +63,7 @@ namespace space_panda_link
       void setup_ros_interfaces();
 
       // State
-      std::mutex data_mutex_;
+      // std::mutex data_mutex_;
       bool ready_;
 
       // Main Loop
@@ -72,12 +74,13 @@ namespace space_panda_link
       rclcpp::Subscription<WrenchStamped>::SharedPtr follower_wrench_subscriber_;
       rclcpp::Publisher<WrenchStamped>::SharedPtr leader_wrench_publisher_;
       void follower_wrench_callback(const WrenchStamped::SharedPtr msg);
-      double wrench_filter_alpha_ = 1.0;
+      // Wrench input_wrench_;
+      // Wrench d_input_wrench;
       bool first_wrench_received_ = false;
-      Wrench follower_wrench_;
-      Wrench previous_follower_wrench_;
-      Wrench calculate_command_wrench(Wrench input_wrench);
-      void publish_zero_wrench();
+      WrenchStamped current_input_wrench_msg_;
+      WrenchStamped previous_input_wrench_msg_;
+      Wrench transient_command_wrench_;
+      // Wrench calculate_command_wrench();
 
       // Mimicing
       rclcpp::Publisher<PoseStamped>::SharedPtr follower_pose_publisher_;
@@ -91,6 +94,9 @@ namespace space_panda_link
       // Helper Functions
       double apply_deadband(double value, double threshold);
       Pose create_scaled_pose(Transform tf, double scale);
+      void publish_zero_wrench();
+      Wrench get_zero_wrench();
+      double get_leftover(double value, double threshold);
 
       // TF 
       std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;

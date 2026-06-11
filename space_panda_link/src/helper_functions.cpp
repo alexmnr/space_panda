@@ -66,6 +66,9 @@ namespace space_panda_link
     pose.position.y = scale * tf.translation.y;
     pose.position.z = scale * tf.translation.z;
     // Scale Rotation
+    if (scale > 1.0) {
+      scale = 1.0;
+    }
     tf2::Quaternion target_q;
     tf2::fromMsg(tf.rotation, target_q);
     target_q.normalize();
@@ -73,13 +76,23 @@ namespace space_panda_link
     double angle = target_q.getAngle();
     tf2::Quaternion scaled_q;
     if (std::abs(angle) > 1e-5) {
-      double scaled_angle = angle * mimic_scale_;
+      double scaled_angle = angle * scale;
       scaled_q.setRotation(axis, scaled_angle);
     } else {
       scaled_q = tf2::Quaternion::getIdentity();
     }
     pose.orientation = tf2::toMsg(scaled_q);
     return pose;
+  }
+
+  // --- Helper Function: Get Leftover
+  double SpacePandaLink::get_leftover(double value, double threshold) {
+    if (value > threshold) {
+        return value - threshold;
+    } else if (value < -threshold) {
+        return value + threshold;
+    }
+    return 0.0;
   }
 
 }  // namespace space_panda_link

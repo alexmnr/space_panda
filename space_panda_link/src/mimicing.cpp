@@ -19,7 +19,6 @@ namespace space_panda_link
 
   // --- Mimic Function: Set Servo Command Type
   bool SpacePandaLink::set_servo_command_type(int8_t command_type) {
-    RCLCPP_INFO(this->get_logger(), "Switching Servo Command Type...");
     // Wait for the service to be available (returns false if it times out)
     if (!follower_servo_client_->wait_for_service(std::chrono::seconds(3))) {
       RCLCPP_ERROR(this->get_logger(), "Service not available after timeout.");

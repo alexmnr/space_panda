@@ -23,15 +23,6 @@ namespace space_panda_link
   // --- Setup
   void SpacePandaLink::setup() {
     if (enabled_) {
-      // Setting Reference
-      RCLCPP_INFO(this->get_logger(), "Setting reference...");
-      while (rclcpp::ok()) {
-        if (set_reference()) {
-          break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
-      RCLCPP_INFO(this->get_logger(), "Successfully set reference.");
       // Enable Pose Servo
       RCLCPP_INFO(this->get_logger(), "Switching Servo Command Type...");
       while (rclcpp::ok()) {
@@ -41,6 +32,15 @@ namespace space_panda_link
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
       RCLCPP_INFO(this->get_logger(), "Successfully switched Servo Command Type.");
+      // Setting Reference
+      RCLCPP_INFO(this->get_logger(), "Setting reference...");
+      while (rclcpp::ok()) {
+        if (set_reference()) {
+          break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      RCLCPP_INFO(this->get_logger(), "Successfully set reference.");
       RCLCPP_INFO(this->get_logger(), "Starting mimicing!");
       ready_ = true;
     } else {
@@ -49,34 +49,21 @@ namespace space_panda_link
 
   }
 
-  // --- Main Loop
+  // --- Main Mimicing Loop
   void SpacePandaLink::loop_callback() {
     if (ready_) {
-      // Get current leader target
-      auto target_tf_opt = get_current_tf("leader_reference", leader_tf_prefix_+"ft_frame");
-      if (!target_tf_opt.has_value()) {return;}
-      Transform target_tf = target_tf_opt.value();
-      // Create Pose Stamped Message
-      PoseStamped msg = PoseStamped();
-      msg.header.frame_id = "follower_reference";
-      msg.header.stamp = this->get_clock()->now();
-      msg.pose = create_scaled_pose(target_tf, mimic_scale_);
-      // Publish Pose
       if (mimicing_enabled_) {
+        // Get current leader target
+        auto target_tf_opt = get_current_tf("leader_reference", leader_tf_prefix_+"ft_frame");
+        if (!target_tf_opt.has_value()) {return;}
+        Transform target_tf = target_tf_opt.value();
+        // Create Pose Stamped Message
+        PoseStamped msg = PoseStamped();
+        msg.header.frame_id = "follower_reference";
+        msg.header.stamp = this->get_clock()->now();
+        msg.pose = create_scaled_pose(target_tf, mimic_scale_);
+        // Publish Pose
         follower_pose_publisher_->publish(msg);
-      }
-      // Create Command Wrench Message
-      Wrench current_wrench_;
-      {
-        std::lock_guard<std::mutex> lock(data_mutex_);
-        current_wrench_ = follower_wrench_;
-      }
-      WrenchStamped leader_wrench_msg = WrenchStamped();
-      leader_wrench_msg.header.stamp = this->get_clock()->now();
-      leader_wrench_msg.wrench = calculate_command_wrench(current_wrench_);
-      // Publish Command Wrench
-      if (wrench_passthrough_enabled_) {
-        leader_wrench_publisher_->publish(leader_wrench_msg);
       }
     }
   }

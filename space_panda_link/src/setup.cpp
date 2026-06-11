@@ -26,21 +26,25 @@ namespace space_panda_link
     this->declare_parameter("wrench_passthrough.enabled", true);
     wrench_passthrough_enabled_ = this->get_parameter("wrench_passthrough.enabled").as_bool();
 
-    // Force gains & threshold
-    this->declare_parameter("wrench_passthrough.force.p_gain", 1.0);
-    force_p_gain_ = this->get_parameter("wrench_passthrough.force.p_gain").as_double();
-    this->declare_parameter("wrench_passthrough.force.d_gain", 0.1);
-    force_d_gain_ = this->get_parameter("wrench_passthrough.force.d_gain").as_double();
-    this->declare_parameter("wrench_passthrough.force.threshold", 1.0);
-    force_threshold_ = this->get_parameter("wrench_passthrough.force.threshold").as_double();
+      // Force parameters
+    this->declare_parameter("wrench_passthrough.force.transient_limit", 10.0);
+    force_transient_limit_ = this->get_parameter("wrench_passthrough.force.transient_limit").as_double();
+    this->declare_parameter("wrench_passthrough.force.transient_scale", 1.0);
+    force_transient_scale_ = this->get_parameter("wrench_passthrough.force.transient_scale").as_double();
+    this->declare_parameter("wrench_passthrough.force.steady_scale", 0.5);
+    force_steady_scale_ = this->get_parameter("wrench_passthrough.force.steady_scale").as_double();
+    this->declare_parameter("wrench_passthrough.force.steady_alpha", 0.01);
+    force_steady_alpha_ = this->get_parameter("wrench_passthrough.force.steady_alpha").as_double();
 
-    // Torque gains & threshold
-    this->declare_parameter("wrench_passthrough.torque.p_gain", 1.0);
-    torque_p_gain_ = this->get_parameter("wrench_passthrough.torque.p_gain").as_double();
-    this->declare_parameter("wrench_passthrough.torque.d_gain", 0.1);
-    torque_d_gain_ = this->get_parameter("wrench_passthrough.torque.d_gain").as_double();
-    this->declare_parameter("wrench_passthrough.torque.threshold", 1.0);
-    torque_threshold_ = this->get_parameter("wrench_passthrough.torque.threshold").as_double();
+    // Torque parameters
+    this->declare_parameter("wrench_passthrough.torque.transient_limit", 10.0);
+    torque_transient_limit_ = this->get_parameter("wrench_passthrough.torque.transient_limit").as_double();
+    this->declare_parameter("wrench_passthrough.torque.transient_scale", 1.0);
+    torque_transient_scale_ = this->get_parameter("wrench_passthrough.torque.transient_scale").as_double();
+    this->declare_parameter("wrench_passthrough.torque.steady_scale", 0.5);
+    torque_steady_scale_ = this->get_parameter("wrench_passthrough.torque.steady_scale").as_double();
+    this->declare_parameter("wrench_passthrough.torque.steady_alpha", 0.01);
+    torque_steady_alpha_ = this->get_parameter("wrench_passthrough.torque.steady_alpha").as_double();
 
     // Mimicing parameters
     this->declare_parameter("mimicing.enabled", true);
@@ -64,8 +68,8 @@ namespace space_panda_link
 
     // Follower Wrench Subscription
     follower_wrench_subscriber_ = this->create_subscription<WrenchStamped>(
-        // follower_ns_ + "/wrench",
-        "/fake_wrench",
+        follower_ns_ + "/wrench",
+        // "/fake_wrench",
         rclcpp::SensorDataQoS(),
         std::bind(&SpacePandaLink::follower_wrench_callback, this, std::placeholders::_1),
         sub_options
@@ -111,30 +115,41 @@ namespace space_panda_link
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.enabled -> %s", 
             wrench_passthrough_enabled_ ? "true" : "false");
       } 
-      else if (name == "wrench_passthrough.force.p_gain") {
-        force_p_gain_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.p_gain -> %.2f", force_p_gain_);
+      // Force changes
+      else if (name == "wrench_passthrough.force.transient_limit") {
+        force_transient_limit_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.transient_limit -> %.2f", force_transient_limit_);
       } 
-      else if (name == "wrench_passthrough.force.d_gain") {
-        force_d_gain_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.d_gain -> %.2f", force_d_gain_);
+      else if (name == "wrench_passthrough.force.transient_scale") {
+        force_transient_scale_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.transient_scale -> %.2f", force_transient_scale_);
       } 
-      else if (name == "wrench_passthrough.force.threshold") {
-        force_threshold_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.threshold -> %.2f", force_threshold_);
+      else if (name == "wrench_passthrough.force.steady_scale") {
+        force_steady_scale_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.steady_scale -> %.2f", force_steady_scale_);
       } 
-      else if (name == "wrench_passthrough.torque.p_gain") {
-        torque_p_gain_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.p_gain -> %.2f", torque_p_gain_);
+      else if (name == "wrench_passthrough.force.steady_alpha") {
+        force_steady_alpha_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.steady_alpha -> %.2f", force_steady_alpha_);
       } 
-      else if (name == "wrench_passthrough.torque.d_gain") {
-        torque_d_gain_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.d_gain -> %.2f", torque_d_gain_);
+      // Torque changes
+      else if (name == "wrench_passthrough.torque.transient_limit") {
+        torque_transient_limit_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.transient_limit -> %.2f", torque_transient_limit_);
       } 
-      else if (name == "wrench_passthrough.torque.threshold") {
-        torque_threshold_ = param.as_double();
-        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.threshold -> %.2f", torque_threshold_);
+      else if (name == "wrench_passthrough.torque.transient_scale") {
+        torque_transient_scale_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.transient_scale -> %.2f", torque_transient_scale_);
       } 
+      else if (name == "wrench_passthrough.torque.steady_scale") {
+        torque_steady_scale_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.steady_scale -> %.2f", torque_steady_scale_);
+      } 
+      else if (name == "wrench_passthrough.torque.steady_alpha") {
+        torque_steady_alpha_ = param.as_double();
+        RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.steady_alpha -> %.2f", torque_steady_alpha_);
+      } 
+      // Mimicing changes
       else if (name == "mimicing.enabled") {
         mimicing_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: mimicing.enabled -> %s", 
