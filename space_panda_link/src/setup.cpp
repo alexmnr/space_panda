@@ -114,6 +114,7 @@ namespace space_panda_link
         wrench_passthrough_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.enabled -> %s", 
             wrench_passthrough_enabled_ ? "true" : "false");
+        setup();
       } 
       // Force changes
       else if (name == "wrench_passthrough.force.transient_limit") {
@@ -154,6 +155,7 @@ namespace space_panda_link
         mimicing_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: mimicing.enabled -> %s", 
             mimicing_enabled_ ? "true" : "false");
+        setup();
       } 
       else if (name == "mimicing.scale") {
         mimic_scale_ = param.as_double();

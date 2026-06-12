@@ -6,10 +6,10 @@
     wrench_passthrough: 
       enabled: True
       force:
-        transient_limit: 10.0
-        transient_scale: 0.4
-        steady_alpha: 0.001
-        steady_scale: 0.1
+        transient_limit: 150.0
+        transient_scale: 1.0
+        steady_alpha: 0.01
+        steady_scale: 0.0
       torque:
         transient_limit: 10.0
         transient_scale: 0.5

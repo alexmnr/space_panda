@@ -4,7 +4,7 @@ namespace space_panda_link
 {
   // --- Follower Wrench Callback
   void SpacePandaLink::follower_wrench_callback(const WrenchStamped::SharedPtr msg) {
-    // std::lock_guard<std::mutex> lock(data_mutex_);
+    return;
     // Check wheter its the first run
     if (!first_wrench_received_) {
       current_input_wrench_msg_ = *msg;
@@ -30,25 +30,9 @@ namespace space_panda_link
     if (wrench_passthrough_enabled_) {
       leader_wrench_publisher_->publish(command_msg);
     }
-
     // Save previous input wrench message
     previous_input_wrench_msg_ = current_input_wrench_msg_;
   }
-
-  // --- Calculate Command Wrench
-  // SpacePandaLink::Wrench SpacePandaLink::calculate_command_wrench() {
-  //   Wrench command_wrench;
-  //   {
-  //     std::lock_guard<std::mutex> lock(data_mutex_);
-  //     command_wrench.force.x  = force_p_gain_  *  input_wrench_.force.x  + force_d_gain_ * d_input_wrench.force.x;
-  //     command_wrench.force.y  = force_p_gain_  *  input_wrench_.force.y  + force_d_gain_ * d_input_wrench.force.y;
-  //     command_wrench.force.z  = force_p_gain_  *  input_wrench_.force.z  + force_d_gain_ * d_input_wrench.force.z;
-  //     command_wrench.torque.x = torque_p_gain_ *  input_wrench_.torque.x + force_d_gain_ * d_input_wrench.force.x;
-  //     command_wrench.torque.y = torque_p_gain_ *  input_wrench_.torque.y + force_d_gain_ * d_input_wrench.force.y;
-  //     command_wrench.torque.z = torque_p_gain_ *  input_wrench_.torque.z + force_d_gain_ * d_input_wrench.force.z;
-  //   }
-  //   return command_wrench;
-  // }
 
   // --- Publish Zero Wrench
   void SpacePandaLink::publish_zero_wrench() {

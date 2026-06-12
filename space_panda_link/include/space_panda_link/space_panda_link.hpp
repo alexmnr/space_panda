@@ -98,6 +98,11 @@ namespace space_panda_link
       Wrench get_zero_wrench();
       double get_leftover(double value, double threshold);
 
+      // spring test
+      double last_z_ = 0.0;
+      std::chrono::steady_clock::time_point last_time_;
+      bool is_first_run_ = true;
+
       // TF 
       std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
       std::unique_ptr<tf2_ros::TransformBroadcaster> tf_dynamic_broadcaster_;

@@ -11,8 +11,8 @@
 /**/space_panda_controller:
   ros__parameters:
     friction_compensation: false
-    command_force_limit: 30.0
-    command_torque_limit: 4.0
+    command_force_limit: 100.0
+    command_torque_limit: 5.0
     joints:
       - $(var tf_prefix)joint_1
       - $(var tf_prefix)joint_2
