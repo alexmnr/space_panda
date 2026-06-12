@@ -4,39 +4,70 @@ namespace space_panda_link
 {
   // --- Follower Wrench Callback
   void SpacePandaLink::follower_wrench_callback(const WrenchStamped::SharedPtr msg) {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    adjusted_input_wrench_.force.x  = msg->wrench.force.x  - input_wrench_offset_.force.x;
+    adjusted_input_wrench_.force.y  = msg->wrench.force.y  - input_wrench_offset_.force.y;
+    adjusted_input_wrench_.force.z  = msg->wrench.force.z  - input_wrench_offset_.force.z;
+    adjusted_input_wrench_.torque.x = msg->wrench.torque.y - input_wrench_offset_.torque.x;
+    adjusted_input_wrench_.torque.y = msg->wrench.torque.x - input_wrench_offset_.torque.y;
+    adjusted_input_wrench_.torque.z = msg->wrench.torque.z - input_wrench_offset_.torque.z;
+    filtered_input_wrench_.force.x  = (alpha_ * -adjusted_input_wrench_.force.y ) + ((1 - alpha_) * filtered_input_wrench_.force.x );
+    filtered_input_wrench_.force.y  = (alpha_ * adjusted_input_wrench_.force.x ) + ((1 - alpha_) * filtered_input_wrench_.force.y );
+    filtered_input_wrench_.force.z  = (alpha_ * adjusted_input_wrench_.force.z ) + ((1 - alpha_) * filtered_input_wrench_.force.z );
+    filtered_input_wrench_.torque.x = (alpha_ * -adjusted_input_wrench_.torque.x) + ((1 - alpha_) * filtered_input_wrench_.torque.x);
+    filtered_input_wrench_.torque.y = (alpha_ * adjusted_input_wrench_.torque.y) + ((1 - alpha_) * filtered_input_wrench_.torque.y);
+    filtered_input_wrench_.torque.z = (alpha_ * adjusted_input_wrench_.torque.z) + ((1 - alpha_) * filtered_input_wrench_.torque.z);
     return;
-    // Check wheter its the first run
-    if (!first_wrench_received_) {
-      current_input_wrench_msg_ = *msg;
-      first_wrench_received_ = true;
-      return;
-    } 
-    // Save current input wrench message
-    current_input_wrench_msg_ = *msg;
-    // Calculate Command Wrench from Input Wrench
-    Wrench command_wrench = get_zero_wrench();
-    // Transient
-    command_wrench.force.z += force_transient_scale_ * std::clamp(current_input_wrench_msg_.wrench.force.z, -force_transient_limit_, force_transient_limit_);
-    // Steady
-    Wrench current_leftover;
-    Wrench previous_leftover;
-    current_leftover.force.z = get_leftover(current_input_wrench_msg_.wrench.force.z, force_transient_limit_);
-    transient_command_wrench_.force.z = force_steady_alpha_ * current_leftover.force.z + (1 - force_steady_alpha_) * transient_command_wrench_.force.z;
-    command_wrench.force.z += force_steady_scale_ * transient_command_wrench_.force.z;
-    // Publish command wrench
-    WrenchStamped command_msg;
-    command_msg.header.stamp = this->get_clock()->now();
-    command_msg.wrench = command_wrench;
-    if (wrench_passthrough_enabled_) {
-      leader_wrench_publisher_->publish(command_msg);
+  }
+
+  // --- Publish Zero Wrench
+  void SpacePandaLink::calibrate_input_wrench() {
+    RCLCPP_INFO(this->get_logger(), "Calibrating follower wrench...");
+    int counter = 0;
+    const int calibration_length = 100;
+    Wrench temp_wrench_offset;
+    // Reset current offset
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      input_wrench_offset_ = get_zero_wrench();
     }
-    // Save previous input wrench message
-    previous_input_wrench_msg_ = current_input_wrench_msg_;
+    while (rclcpp::ok()) {
+      // get current wrench
+      Wrench temp_wrench;
+      {
+        std::lock_guard<std::mutex> lock(data_mutex_);
+        temp_wrench = adjusted_input_wrench_;
+      }
+      if (temp_wrench.force.z == 0.0) {continue;} // Wait for data
+                                                  // Add to offset
+      temp_wrench_offset.force.x  += temp_wrench.force.x;
+      temp_wrench_offset.force.y  += temp_wrench.force.y;
+      temp_wrench_offset.force.z  += temp_wrench.force.z;
+      temp_wrench_offset.torque.x += temp_wrench.torque.x;
+      temp_wrench_offset.torque.y += temp_wrench.torque.y;
+      temp_wrench_offset.torque.z += temp_wrench.torque.z;
+      counter++;
+      if (counter >= calibration_length) {break;}
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    // Final offset calculations
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      input_wrench_offset_.force.x  = temp_wrench_offset.force.x  / calibration_length;
+      input_wrench_offset_.force.y  = temp_wrench_offset.force.y  / calibration_length;
+      input_wrench_offset_.force.z  = temp_wrench_offset.force.z  / calibration_length;
+      input_wrench_offset_.torque.x = temp_wrench_offset.torque.x / calibration_length;
+      input_wrench_offset_.torque.y = temp_wrench_offset.torque.y / calibration_length;
+      input_wrench_offset_.torque.z = temp_wrench_offset.torque.z / calibration_length;
+      filtered_input_wrench_ = get_zero_wrench();
+    }
+    RCLCPP_INFO(this->get_logger(), "Successfully calibrated follower wrench.");
   }
 
   // --- Publish Zero Wrench
   void SpacePandaLink::publish_zero_wrench() {
     WrenchStamped msg = WrenchStamped();
+    msg.header.stamp = this->get_clock()->now();
     msg.wrench = get_zero_wrench();
     leader_wrench_publisher_->publish(msg);
   }

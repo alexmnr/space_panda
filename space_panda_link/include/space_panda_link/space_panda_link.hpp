@@ -43,14 +43,15 @@ namespace space_panda_link
       std::string leader_tf_prefix_;
       std::string follower_ns_;
       std::string follower_tf_prefix_;
-      double force_transient_limit_;
-      double force_transient_scale_;
-      double force_steady_scale_;
-      double force_steady_alpha_;
-      double torque_transient_limit_;
-      double torque_transient_scale_;
-      double torque_steady_scale_;
-      double torque_steady_alpha_;
+      // double force_transient_limit_;
+      // double force_transient_scale_;
+      // double force_steady_scale_;
+      // double force_steady_alpha_;
+      // double torque_transient_limit_;
+      // double torque_transient_scale_;
+      // double torque_steady_scale_;
+      // double torque_steady_alpha_;
+      double alpha_ = 0.10;
       double mimic_scale_;
       bool wrench_passthrough_enabled_;
       bool mimicing_enabled_;
@@ -63,7 +64,7 @@ namespace space_panda_link
       void setup_ros_interfaces();
 
       // State
-      // std::mutex data_mutex_;
+      std::mutex data_mutex_;
       bool ready_;
 
       // Main Loop
@@ -74,22 +75,22 @@ namespace space_panda_link
       rclcpp::Subscription<WrenchStamped>::SharedPtr follower_wrench_subscriber_;
       rclcpp::Publisher<WrenchStamped>::SharedPtr leader_wrench_publisher_;
       void follower_wrench_callback(const WrenchStamped::SharedPtr msg);
-      // Wrench input_wrench_;
-      // Wrench d_input_wrench;
-      bool first_wrench_received_ = false;
-      WrenchStamped current_input_wrench_msg_;
-      WrenchStamped previous_input_wrench_msg_;
-      Wrench transient_command_wrench_;
-      // Wrench calculate_command_wrench();
+      void calibrate_input_wrench();
+      Wrench adjusted_input_wrench_;
+      Wrench filtered_input_wrench_;
+      Wrench input_wrench_offset_;
+      // bool first_wrench_received_ = false;
+      // WrenchStamped current_input_wrench_msg_;
+      // WrenchStamped previous_input_wrench_msg_;
 
       // Mimicing
       rclcpp::Publisher<PoseStamped>::SharedPtr follower_pose_publisher_;
       rclcpp::Publisher<TwistStamped>::SharedPtr follower_twist_publisher_;
       rclcpp::Client<ServoCommandType>::SharedPtr follower_servo_client_;
-      bool set_reference();
+      void set_reference();
       Transform leader_reference_;
       Transform follower_reference_;
-      bool set_servo_command_type(int8_t command_type);
+      void set_servo_command_type(int8_t command_type);
 
       // Helper Functions
       double apply_deadband(double value, double threshold);

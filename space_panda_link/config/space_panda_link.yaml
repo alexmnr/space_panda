@@ -5,16 +5,16 @@
     follower_ns: "ur20"
     wrench_passthrough: 
       enabled: True
-      force:
-        transient_limit: 150.0
-        transient_scale: 1.0
-        steady_alpha: 0.01
-        steady_scale: 0.0
-      torque:
-        transient_limit: 10.0
-        transient_scale: 0.5
-        steady_alpha: 0.005
-        steady_scale: 0.1
+      # force:
+      #   transient_limit: 150.0
+      #   transient_scale: 1.0
+      #   steady_alpha: 0.01
+      #   steady_scale: 0.0
+      # torque:
+      #   transient_limit: 10.0
+      #   transient_scale: 0.5
+      #   steady_alpha: 0.005
+      #   steady_scale: 0.1
     mimicing: 
       enabled: True
-      scale: 0.3
+      scale: 0.2
