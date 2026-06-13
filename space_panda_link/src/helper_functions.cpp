@@ -94,5 +94,4 @@ namespace space_panda_link
     }
     return 0.0;
   }
-
 }  // namespace space_panda_link

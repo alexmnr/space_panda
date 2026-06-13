@@ -33,9 +33,9 @@ namespace space_panda_link
         set_servo_command_type(moveit_msgs::srv::ServoCommandType::Request::POSE);
         // Setting Reference
         set_reference();
-        RCLCPP_INFO(this->get_logger(), "Starting mimicing!");
       }
       ready_ = true;
+      RCLCPP_INFO(this->get_logger(), "Ready!");
     } else {
       ready_ = false;
     }
@@ -44,6 +44,8 @@ namespace space_panda_link
   // --- Main Mimicing Loop
   void SpacePandaLink::loop_callback() {
     if (ready_) {
+      Wrench command_wrench = get_zero_wrench();
+      // Mimicing
       if (mimicing_enabled_) {
         // Get current leader target
         auto target_tf_opt = get_current_tf("leader_reference", leader_tf_prefix_+"ft_frame");
@@ -53,19 +55,61 @@ namespace space_panda_link
         PoseStamped msg = PoseStamped();
         msg.header.frame_id = "follower_reference";
         msg.header.stamp = this->get_clock()->now();
-        msg.pose = create_scaled_pose(target_tf, mimic_scale_);
+        msg.pose = create_scaled_pose(target_tf, mimicing_scale_);
         // Publish Pose
         follower_pose_publisher_->publish(msg);
       }
+      // Wrench passthrough
       if (wrench_passthrough_enabled_) {
-        WrenchStamped msg;
-        msg.header.stamp = this->get_clock()->now();
         {
           std::lock_guard<std::mutex> lock(data_mutex_);
-          msg.wrench = filtered_input_wrench_;
+          command_wrench.force.x  += wrench_force_scale_  * filtered_input_wrench_.force.x;
+          command_wrench.force.y  += wrench_force_scale_  * filtered_input_wrench_.force.y;
+          command_wrench.force.z  += wrench_force_scale_  * filtered_input_wrench_.force.z;
+          command_wrench.torque.x += wrench_torque_scale_ * filtered_input_wrench_.torque.x;
+          command_wrench.torque.y += wrench_torque_scale_ * filtered_input_wrench_.torque.y;
+          command_wrench.torque.z += wrench_torque_scale_ * filtered_input_wrench_.torque.z;
         }
-        leader_wrench_publisher_->publish(msg);
       }
+      // Damping
+      if (damping_enabled_) {
+        // Get current transform
+        auto current_leader_tf_opt = get_current_tf(leader_tf_prefix_+"base_link", leader_tf_prefix_+"ft_frame");
+        if (current_leader_tf_opt.has_value()) {
+          current_leader_tf_ = current_leader_tf_opt.value();
+          current_tf_time_ = this->get_clock()->now();
+          // Calculate velocity
+          if (is_first_damping_run_) {
+            // Update previous states
+            previous_leader_tf_ = current_leader_tf_;
+            previous_tf_time_ = current_tf_time_;
+            is_first_damping_run_ = false;
+          } else {
+            // Calculate linear velocity
+            tf2::Vector3 linear_velocity = calculate_linear_velocity(current_leader_tf_, previous_leader_tf_, current_tf_time_, previous_tf_time_);
+            // Check if force threshold is reached
+            double absolute_force = 0.0;
+            {
+              std::lock_guard<std::mutex> lock(data_mutex_);
+              absolute_force = abs(adjusted_input_wrench_.force.x) + abs(adjusted_input_wrench_.force.y) + abs(adjusted_input_wrench_.force.z);
+            }
+            if (absolute_force >= damping_force_threshold_ || !wrench_passthrough_enabled_) {
+              // Calculate damping force
+              command_wrench.force.x -= damping_value_ * linear_velocity.x();
+              command_wrench.force.y -= damping_value_ * linear_velocity.y();
+              command_wrench.force.z -= damping_value_ * linear_velocity.z();
+            }
+            // Update previous states
+            previous_leader_tf_ = current_leader_tf_;
+            previous_tf_time_ = current_tf_time_;
+          }
+        }
+      }
+      // Create final command wrench message
+      WrenchStamped msg;
+      msg.header.stamp = this->get_clock()->now();
+      msg.wrench = command_wrench;
+      leader_wrench_publisher_->publish(msg);
     }
   }
 

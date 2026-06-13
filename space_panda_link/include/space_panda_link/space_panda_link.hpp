@@ -39,23 +39,24 @@ namespace space_panda_link
       // Parameters
       rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback;
       rcl_interfaces::msg::SetParametersResult on_parameter_change(const std::vector<rclcpp::Parameter> &parameters);
+      // General parameters
+      bool enabled_;
       std::string leader_ns_;
       std::string leader_tf_prefix_;
       std::string follower_ns_;
       std::string follower_tf_prefix_;
-      // double force_transient_limit_;
-      // double force_transient_scale_;
-      // double force_steady_scale_;
-      // double force_steady_alpha_;
-      // double torque_transient_limit_;
-      // double torque_transient_scale_;
-      // double torque_steady_scale_;
-      // double torque_steady_alpha_;
-      double alpha_ = 0.10;
-      double mimic_scale_;
+      // Damping
+      double damping_enabled_;
+      double damping_value_;
+      double damping_force_threshold_;
+      // Wrench passthrough parameters
       bool wrench_passthrough_enabled_;
+      double wrench_filter_alpha_;
+      double wrench_force_scale_;
+      double wrench_torque_scale_;
+      // Mimicing parameters
       bool mimicing_enabled_;
-      bool enabled_;
+      double mimicing_scale_;
 
       // Setup
       rclcpp::CallbackGroup::SharedPtr interface_callback_group_;
@@ -79,9 +80,6 @@ namespace space_panda_link
       Wrench adjusted_input_wrench_;
       Wrench filtered_input_wrench_;
       Wrench input_wrench_offset_;
-      // bool first_wrench_received_ = false;
-      // WrenchStamped current_input_wrench_msg_;
-      // WrenchStamped previous_input_wrench_msg_;
 
       // Mimicing
       rclcpp::Publisher<PoseStamped>::SharedPtr follower_pose_publisher_;
@@ -92,17 +90,20 @@ namespace space_panda_link
       Transform follower_reference_;
       void set_servo_command_type(int8_t command_type);
 
+      // Damping
+      rclcpp::Time current_tf_time_;
+      rclcpp::Time previous_tf_time_;
+      Transform current_leader_tf_;
+      Transform previous_leader_tf_;
+      bool is_first_damping_run_ = true;
+      tf2::Vector3 calculate_linear_velocity(Transform current_tf, Transform previous_tf, rclcpp::Time current_time, rclcpp::Time previous_time);
+
       // Helper Functions
       double apply_deadband(double value, double threshold);
       Pose create_scaled_pose(Transform tf, double scale);
       void publish_zero_wrench();
       Wrench get_zero_wrench();
       double get_leftover(double value, double threshold);
-
-      // spring test
-      double last_z_ = 0.0;
-      std::chrono::steady_clock::time_point last_time_;
-      bool is_first_run_ = true;
 
       // TF 
       std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;

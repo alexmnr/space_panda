@@ -32,6 +32,7 @@ add_executable(
   src/mimicing.cpp 
   src/wrench_passthrough.cpp 
   src/setup.cpp
+  src/damping.cpp
 )
 
 # Add include directories for the executable

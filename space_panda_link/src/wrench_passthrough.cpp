@@ -5,18 +5,18 @@ namespace space_panda_link
   // --- Follower Wrench Callback
   void SpacePandaLink::follower_wrench_callback(const WrenchStamped::SharedPtr msg) {
     std::lock_guard<std::mutex> lock(data_mutex_);
-    adjusted_input_wrench_.force.x  = msg->wrench.force.x  - input_wrench_offset_.force.x;
-    adjusted_input_wrench_.force.y  = msg->wrench.force.y  - input_wrench_offset_.force.y;
-    adjusted_input_wrench_.force.z  = msg->wrench.force.z  - input_wrench_offset_.force.z;
-    adjusted_input_wrench_.torque.x = msg->wrench.torque.y - input_wrench_offset_.torque.x;
-    adjusted_input_wrench_.torque.y = msg->wrench.torque.x - input_wrench_offset_.torque.y;
-    adjusted_input_wrench_.torque.z = msg->wrench.torque.z - input_wrench_offset_.torque.z;
-    filtered_input_wrench_.force.x  = (alpha_ * -adjusted_input_wrench_.force.y ) + ((1 - alpha_) * filtered_input_wrench_.force.x );
-    filtered_input_wrench_.force.y  = (alpha_ * adjusted_input_wrench_.force.x ) + ((1 - alpha_) * filtered_input_wrench_.force.y );
-    filtered_input_wrench_.force.z  = (alpha_ * adjusted_input_wrench_.force.z ) + ((1 - alpha_) * filtered_input_wrench_.force.z );
-    filtered_input_wrench_.torque.x = (alpha_ * -adjusted_input_wrench_.torque.x) + ((1 - alpha_) * filtered_input_wrench_.torque.x);
-    filtered_input_wrench_.torque.y = (alpha_ * adjusted_input_wrench_.torque.y) + ((1 - alpha_) * filtered_input_wrench_.torque.y);
-    filtered_input_wrench_.torque.z = (alpha_ * adjusted_input_wrench_.torque.z) + ((1 - alpha_) * filtered_input_wrench_.torque.z);
+    adjusted_input_wrench_.force.x  =  msg->wrench.force.y  - input_wrench_offset_.force.x;
+    adjusted_input_wrench_.force.y  =  -msg->wrench.force.x  - input_wrench_offset_.force.y;
+    adjusted_input_wrench_.force.z  =  msg->wrench.force.z  - input_wrench_offset_.force.z;
+    adjusted_input_wrench_.torque.x =  msg->wrench.torque.y - input_wrench_offset_.torque.x;
+    adjusted_input_wrench_.torque.y =  -msg->wrench.torque.x - input_wrench_offset_.torque.y;
+    adjusted_input_wrench_.torque.z =  msg->wrench.torque.z - input_wrench_offset_.torque.z;
+    filtered_input_wrench_.force.x  = (wrench_filter_alpha_ * adjusted_input_wrench_.force.x ) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.force.x );
+    filtered_input_wrench_.force.y  = (wrench_filter_alpha_ * adjusted_input_wrench_.force.y ) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.force.y );
+    filtered_input_wrench_.force.z  = (wrench_filter_alpha_ * adjusted_input_wrench_.force.z ) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.force.z );
+    filtered_input_wrench_.torque.x = (wrench_filter_alpha_ * adjusted_input_wrench_.torque.x) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.torque.x);
+    filtered_input_wrench_.torque.y = (wrench_filter_alpha_ * adjusted_input_wrench_.torque.y) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.torque.y);
+    filtered_input_wrench_.torque.z = (wrench_filter_alpha_ * adjusted_input_wrench_.torque.z) + ((1 - wrench_filter_alpha_) * filtered_input_wrench_.torque.z);
     return;
   }
 
