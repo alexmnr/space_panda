@@ -25,9 +25,9 @@ namespace space_panda_link
     // Damping
     this->declare_parameter("damping.enabled", true);
     damping_enabled_ = this->get_parameter("damping.enabled").as_bool();
-    this->declare_parameter("damping.value", 50.0);
+    this->declare_parameter("damping.value", 100.0);
     damping_value_ = this->get_parameter("damping.value").as_double();
-    this->declare_parameter("damping.force_threshold", 10.0);
+    this->declare_parameter("damping.force_threshold", 20.0);
     damping_force_threshold_ = this->get_parameter("damping.force_threshold").as_double();
 
     // Wrench passthrough parameters
@@ -35,9 +35,9 @@ namespace space_panda_link
     wrench_passthrough_enabled_ = this->get_parameter("wrench_passthrough.enabled").as_bool();
     this->declare_parameter("wrench_passthrough.filter_alpha", 0.1);
     wrench_filter_alpha_ = this->get_parameter("wrench_passthrough.filter_alpha").as_double();
-    this->declare_parameter("wrench_passthrough.force_scale", 1.0);
+    this->declare_parameter("wrench_passthrough.force_scale", 0.5);
     wrench_force_scale_ = this->get_parameter("wrench_passthrough.force_scale").as_double();
-    this->declare_parameter("wrench_passthrough.torque_scale", 1.0);
+    this->declare_parameter("wrench_passthrough.torque_scale", 0.5);
     wrench_torque_scale_ = this->get_parameter("wrench_passthrough.torque_scale").as_double();
 
     // Mimicing parameters

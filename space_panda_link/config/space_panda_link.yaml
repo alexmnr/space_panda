@@ -10,8 +10,8 @@
     wrench_passthrough: 
       enabled: True
       filter_alpha: 0.1
-      force_scale: 0.6
-      torque_scale: 0.4
+      force_scale: 0.5
+      torque_scale: 0.5
     mimicing: 
       enabled: True
-      scale: 0.3
+      scale: 1.0
