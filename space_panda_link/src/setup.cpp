@@ -94,66 +94,58 @@ namespace space_panda_link
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     result.reason = "success";
+    ready_ = false;
     for (const auto &param : parameters) {
       const std::string &name = param.get_name();
       // General
       if (name == "enabled") {
-        ready_ = false;
         enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: enabled -> %s", 
             enabled_ ? "true" : "false");
-        setup();
       } 
       // Damping
-      else if (name == "damping.enabled") {
-        ready_ = false;
+      if (name == "damping.enabled") {
         damping_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: damping.enabled -> %s", 
             damping_enabled_ ? "true" : "false");
-        setup();
       } 
-      else if (name == "damping.value") {
+      if (name == "damping.value") {
         damping_value_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: damping.value -> %.2f", damping_value_);
       } 
-      else if (name == "damping.force_threshold") {
+      if (name == "damping.force_threshold") {
         damping_force_threshold_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: damping.force_threshold -> %.2f", damping_force_threshold_);
       } 
       // Wrench passthrough
-      else if (name == "wrench_passthrough.enabled") {
-        ready_ = false;
+      if (name == "wrench_passthrough.enabled") {
         wrench_passthrough_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.enabled -> %s", 
             wrench_passthrough_enabled_ ? "true" : "false");
-        setup();
       } 
-      else if (name == "wrench_passthrough.filter_alpha") {
+      if (name == "wrench_passthrough.filter_alpha") {
         wrench_filter_alpha_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.filter_alpha -> %.2f", wrench_filter_alpha_);
       } 
-      else if (name == "wrench_passthrough.force.scale") {
+      if (name == "wrench_passthrough.force.scale") {
         wrench_force_scale_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.force.scale -> %.2f", wrench_force_scale_);
       } 
-      else if (name == "wrench_passthrough.torque.scale") {
+      if (name == "wrench_passthrough.torque.scale") {
         wrench_torque_scale_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: wrench_passthrough.torque.scale -> %.2f", wrench_torque_scale_);
       } 
       // Mimicing changes
-      else if (name == "mimicing.enabled") {
-        ready_ = false;
+      if (name == "mimicing.enabled") {
         mimicing_enabled_ = param.as_bool();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: mimicing.enabled -> %s", 
             mimicing_enabled_ ? "true" : "false");
-        setup();
       } 
-      else if (name == "mimicing.scale") {
-        ready_ = false;
+      if (name == "mimicing.scale") {
         mimicing_scale_ = param.as_double();
         RCLCPP_INFO(this->get_logger(), "Updated Parameter: mimicing.scale -> %.2f", mimicing_scale_);
-        setup();
       }
+      setup();
     }
 
     return result;
