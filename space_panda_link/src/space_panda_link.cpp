@@ -22,6 +22,7 @@ namespace space_panda_link
 
   // --- Setup
   void SpacePandaLink::setup() {
+    ready_ = false;
     if (enabled_) {
       if (wrench_passthrough_enabled_) {
         // Calibrating wrench data
